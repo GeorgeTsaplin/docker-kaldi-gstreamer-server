@@ -30,7 +30,8 @@ RUN apt-get update && apt-get install -y  \
     build-essential \
     python-dev \
     sox \
-    zlib1g-dev && \
+    zlib1g-dev \
+    vim-tiny && \
     apt-get clean autoclean && \
     apt-get autoremove -y && \
     pip install ws4py==0.3.2 && \
