@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y  \
     autoconf \
     automake \
     bzip2 \
-    g++ \
+    g++-7 \
     git \
     gstreamer1.0-plugins-good \
     gstreamer1.0-tools \
@@ -50,7 +50,7 @@ RUN wget http://www.digip.org/jansson/releases/jansson-2.7.tar.bz2 && \
 
 RUN git clone https://github.com/kaldi-asr/kaldi && \
     cd /opt/kaldi/tools && \
-    make -j $(nproc) CXX=g++-7.5 && \
+    make -j $(nproc) && \
     ./install_portaudio.sh && \
     /opt/kaldi/tools/extras/install_mkl.sh && \
     cd /opt/kaldi/src && ./configure --shared && \
