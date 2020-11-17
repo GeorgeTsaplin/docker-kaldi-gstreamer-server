@@ -31,6 +31,7 @@ RUN apt-get update && apt-get install -y  \
     python-dev \
     sox \
     zlib1g-dev \
+    gfortran \
     vim-tiny && \
     apt-get clean autoclean && \
     apt-get autoremove -y && \
