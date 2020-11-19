@@ -48,30 +48,49 @@ RUN wget http://www.digip.org/jansson/releases/jansson-2.7.tar.bz2 && \
     echo "/usr/local/lib" >> /etc/ld.so.conf.d/jansson.conf && ldconfig && \
     rm /opt/jansson-2.7.tar.bz2 && rm -rf /opt/jansson-2.7
 
-RUN git clone https://github.com/kaldi-asr/kaldi && \
-    cd /opt/kaldi/tools && \
-    make -j $(nproc) CXX=g++-7 && \
-    ./install_portaudio.sh && \
-    /opt/kaldi/tools/extras/install_mkl.sh && \
-    cd /opt/kaldi/src && ./configure --shared && \
-    sed -i '/-g # -O0 -DKALDI_PARANOID/c\-O3 -DNDEBUG' kaldi.mk && \
-    make clean -j $(nproc) && make -j $(nproc) depend && make -j $(nproc) && \
-    cd /opt/kaldi/src/online && make depend -j $(nproc) && make -j $(nproc) && \
-    cd /opt/kaldi/src/gst-plugin && sed -i 's/-lmkl_p4n//g' Makefile && make depend -j $(nproc) && make -j $(nproc) && \
-    cd /opt && \
-    git clone https://github.com/alumae/gst-kaldi-nnet2-online.git && \
-    cd /opt/gst-kaldi-nnet2-online/src && \
-    sed -i '/KALDI_ROOT?=\/home\/tanel\/tools\/kaldi-trunk/c\KALDI_ROOT?=\/opt\/kaldi' Makefile && \
-    make depend -j $(nproc) && make -j $(nproc) && \
-    rm -rf /opt/gst-kaldi-nnet2-online/.git/ && \
-    find /opt/gst-kaldi-nnet2-online/src/ -type f -not -name '*.so' -delete && \
-    rm -rf /opt/kaldi/.git && \
-    rm -rf /opt/kaldi/egs/ /opt/kaldi/windows/ /opt/kaldi/misc/ && \
-    find /opt/kaldi/src/ -type f -not -name '*.so' -delete && \
-    find /opt/kaldi/tools/ -type f \( -not -name '*.so' -and -not -name '*.so*' \) -delete && \
-    cd /opt && git clone https://github.com/alumae/kaldi-gstreamer-server.git && \
-    rm -rf /opt/kaldi-gstreamer-server/.git/ && \
-    rm -rf /opt/kaldi-gstreamer-server/test/
+RUN \
+    git clone -b lookahead --single-branch https://github.com/alphacep/kaldi /opt/kaldi \
+    && cd /opt/kaldi/tools \
+    && sed -i 's:status=0:exit 0:g' extras/check_dependencies.sh \
+    && sed -i 's:openfst_add_CXXFLAGS = -g -O2:openfst_add_CXXFLAGS = -g -O3 -msse2:g' Makefile \
+    && sed -i 's:--enable-ngram-fsts:--enable-ngram-fsts --disable-bin:g' Makefile \
+    && make -j $(nproc) openfst cub \
+    && if [ "x$KALDI_MKL" != "x1" ] ; then \
+          sed -i 's:python:python3:g' extras/install_openblas.sh; \
+          sed -i 's:USE_LOCKING=1:DYNAMIC_ARCH=1 USE_LOCKING=1:g' extras/install_openblas.sh; \
+          extras/install_openblas.sh; \
+       else \
+          extras/install_mkl.sh; \
+       fi \
+    \
+    && cd /opt/kaldi/src \
+    && if [ "x$KALDI_MKL" != "x1" ] ; then \
+          ./configure --mathlib=OPENBLAS --shared; \
+       else \
+          ./configure --mathlib=MKL --shared; \
+       fi \
+    && sed -i 's: -O1 : -O3 :g' kaldi.mk \
+    && make -j $(nproc) online2 lm rnnlm \
+    \    
+    && cd /opt/kaldi/src/gst-plugin \
+    && sed -i 's/-lmkl_p4n//g' Makefile \
+    && make depend -j $(nproc) \
+    && make -j $(nproc) \
+    && cd /opt \
+    && git clone https://github.com/alumae/gst-kaldi-nnet2-online.git \
+    && cd /opt/gst-kaldi-nnet2-online/src \
+    && sed -i '/KALDI_ROOT?=\/home\/tanel\/tools\/kaldi-trunk/c\KALDI_ROOT?=\/opt\/kaldi' Makefile \
+    && make depend -j $(nproc) \
+    && make -j $(nproc) \
+    && rm -rf /opt/gst-kaldi-nnet2-online/.git/ \
+    && find /opt/gst-kaldi-nnet2-online/src/ -type f -not -name '*.so' -delete \
+    && rm -rf /opt/kaldi/.git \
+    && rm -rf /opt/kaldi/egs/ /opt/kaldi/windows/ /opt/kaldi/misc/ \
+    && find /opt/kaldi/src/ -type f -not -name '*.so' -delete \
+    && find /opt/kaldi/tools/ -type f \( -not -name '*.so' -and -not -name '*.so*' \) -delete \
+    && cd /opt && git clone https://github.com/alumae/kaldi-gstreamer-server.git \
+    && rm -rf /opt/kaldi-gstreamer-server/.git/ \
+    && rm -rf /opt/kaldi-gstreamer-server/test/
 
 COPY start.sh stop.sh /opt/
 
