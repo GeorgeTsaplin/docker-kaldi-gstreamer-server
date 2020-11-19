@@ -51,6 +51,7 @@ RUN wget http://www.digip.org/jansson/releases/jansson-2.7.tar.bz2 && \
 RUN \
     git clone -b lookahead --single-branch https://github.com/alphacep/kaldi /opt/kaldi \
     && cd /opt/kaldi/tools \
+    && ./install_portaudio.sh \
     && sed -i 's:status=0:exit 0:g' extras/check_dependencies.sh \
     && sed -i 's:openfst_add_CXXFLAGS = -g -O2:openfst_add_CXXFLAGS = -g -O3 -msse2:g' Makefile \
     && sed -i 's:--enable-ngram-fsts:--enable-ngram-fsts --disable-bin:g' Makefile \
