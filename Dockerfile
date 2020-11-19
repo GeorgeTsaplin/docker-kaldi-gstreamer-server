@@ -72,7 +72,10 @@ RUN \
        fi \
     && sed -i 's: -O1 : -O3 :g' kaldi.mk \
     && make -j $(nproc) online2 lm rnnlm \
-    \    
+    \
+    && cd /opt/kaldi/src/online \
+    && make depend -j $(nproc) \
+    && make -j $(nproc) \
     && cd /opt/kaldi/src/gst-plugin \
     && sed -i 's/-lmkl_p4n//g' Makefile \
     && make depend -j $(nproc) \
