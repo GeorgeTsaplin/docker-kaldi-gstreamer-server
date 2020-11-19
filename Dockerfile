@@ -1,12 +1,12 @@
-FROM debian:9
-MAINTAINER Eduardo Silva <zedudu@gmail.com>
+FROM debian:10.4
+MAINTAINER George Tsaplin <george152@mail.ru>
 
 RUN apt-get update && apt-get install -y  \
     procps \
     autoconf \
     automake \
     bzip2 \
-    g++-7 \
+    g++ \
     git \
     gstreamer1.0-plugins-good \
     gstreamer1.0-tools \
